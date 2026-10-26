@@ -1,122 +1,212 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+
+import { useState, type FormEvent } from 'react'
 import './App.css'
+type Task = {
+  id: number
+  title: string
+  completed: boolean
+}
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [showTaskForm, setShowTaskForm] = useState(false)
+  const [tasks, setTasks] = useState<Task[]>([])
+  const completedTasks = tasks.filter((task) => task.completed).length
+  const pendingTasks = tasks.length - completedTasks
+
+  function handleAddTask(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    const formData = new FormData(event.currentTarget)
+    const title = String(formData.get('title') ?? '').trim()
+
+    if (!title) return
+
+    setTasks((currentTasks) => [
+      ...currentTasks,
+      {
+        id: Date.now(),
+        title,
+        completed: false,
+      },
+    ])
+    setShowTaskForm(false)
+  }
+
+  function handleToggleTask(taskId: number) {
+    setTasks((currentTasks) =>
+      currentTasks.map((task) =>
+        task.id === taskId
+          ? { ...task, completed: !task.completed }
+          : task
+      )
+    )
+  }
+
+  function handleDeleteTask(taskId: number) {
+    setTasks((currentTasks) =>
+      currentTasks.filter((task) => task.id !== taskId)
+    )
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="app-layout">
+      <aside className="sidebar">
+        <div className="brand">
+          <span className="brand-icon">M</span>
+          <span>MateCode</span>
         </div>
-        <div>
-          <h1>Get started</h1>
+
+        <nav className="navigation">
+          <a href="#" className="nav-link active">
+            <span>▦</span>
+            Panel principal
+          </a>
+
+          <a href="#" className="nav-link">
+            <span>✓</span>
+            Mis tareas
+          </a>
+
+          <a href="#" className="nav-link">
+            <span>⚙</span>
+            Configuración
+          </a>
+        </nav>
+
+        <div className="sidebar-footer">
+          <span className="avatar">U</span>
+          <div>
+            <strong>Mi cuenta</strong>
+            <small>Espacio de trabajo</small>
+          </div>
+        </div>
+      </aside>
+
+      <main className="main-content">
+        <header className="topbar">
+          <div>
+            <p className="eyebrow">GESTIÓN DE TRABAJO</p>
+            <h1>Panel principal</h1>
+          </div>
+
+          <button className="profile-button" type="button">
+            Mi perfil
+          </button>
+        </header>
+
+        <section className="welcome-section">
+          <p className="eyebrow">TU ESPACIO DE TRABAJO</p>
+          <h2>¡Bienvenido a MateCode!</h2>
           <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
+            Organiza tus tareas y mantén tus proyectos en movimiento.
           </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+        </section>
 
-      <div className="ticks"></div>
+        <section className="summary-grid" aria-label="Resumen de tareas">
+          <article className="summary-card">
+            <span className="summary-label">Total de tareas</span>
+            <strong className="summary-number">{tasks.length}</strong>
+            <span className="summary-note">Tareas registradas</span>
+          </article>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          <article className="summary-card">
+            <span className="summary-label">Pendientes</span>
+            <strong className="summary-number">{pendingTasks}</strong>
+            <span className="summary-note">Por completar</span>
+          </article>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+          <article className="summary-card">
+            <span className="summary-label">Completadas</span>
+            <strong className="summary-number">{completedTasks}</strong>
+            <span className="summary-note">Trabajo realizado</span>
+          </article>
+        </section>
+
+        <section className="tasks-section">
+          {showTaskForm && (
+            <form className="task-form" onSubmit={handleAddTask}>
+              <label htmlFor="task-title">Título de la tarea</label>
+              <input
+                id="task-title"
+                name="title"
+                type="text"
+                placeholder="Ej. Preparar informe"
+              />
+              <button className="primary-button" type="submit">
+                Guardar tarea
+              </button>
+            </form>
+          )}
+
+          <div className="section-heading">
+            <div>
+              <h2>Mis tareas</h2>
+              <p>Aquí podrás consultar y organizar tu trabajo.</p>
+            </div>
+
+            <button
+              className="primary-button"
+              type="button"
+              onClick={() => setShowTaskForm(true)}
+            >
+              + Nueva tarea
+            </button>
+          </div>
+
+          {tasks.length === 0 ? (
+            <div className="empty-state">
+              <span className="empty-icon">✓</span>
+              <h3>Tu espacio está listo</h3>
+              <p>
+                Cuando agregues una tarea, aparecerá aquí.
+              </p>
+            </div>
+          ) : (
+            <ul className="task-list">
+              {tasks.map((task) => (
+                <li
+                  className={`task-item${task.completed ? ' completed' : ''}`}
+                  key={task.id}
+                >
+                  <div className="task-content">
+                    <label className="task-label">
+                      <input
+                        type="checkbox"
+                        checked={task.completed}
+                        onChange={() => handleToggleTask(task.id)}
+                      />
+                      <span>{task.title}</span>
+                    </label>
+
+                    <button
+                      className="delete-button"
+                      type="button"
+                      onClick={() => handleDeleteTask(task.id)}
+                    >
+                      Eliminar
+                    </button>
+
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </main>
+    </div>
   )
 }
 
 export default App
+
+// Prueba de actualización
+
+// Otra prueba
+
+// Prueba de actualización
+
+// Prueba de actualización
+
+// Prueba de actualización.
+
+// Prueba
