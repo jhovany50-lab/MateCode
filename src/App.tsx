@@ -1,51 +1,79 @@
-
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
+import type { User } from 'firebase/auth'
+import { logoutUser, observeAuthState } from './auth/authService'
+import AuthForm from './auth/AuthForm'
 import './App.css'
-type Task = {
-  id: number
-  title: string
-  completed: boolean
-}
+import {
+  addTask,
+  getTasks,
+  updateTask,
+  removeTask,
+  type Task,
+} from './tasks/taskService'
 
 function App() {
+  const [user, setUser] = useState<User | null>(null)
+  const [checkingAuth, setCheckingAuth] = useState(true)
+  useEffect(() => {
+    if (!user) return
+
+    const unsubscribe = getTasks(user.uid, (updatedTasks) => {
+      setTasks(updatedTasks)
+    })
+
+    return unsubscribe
+  }, [user])
+
+  useEffect(() => {
+    const unsubscribe = observeAuthState((currentUser) => {
+      setUser(currentUser)
+      setCheckingAuth(false)
+    })
+
+    return unsubscribe
+  }, [])
+
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [tasks, setTasks] = useState<Task[]>([])
   const completedTasks = tasks.filter((task) => task.completed).length
   const pendingTasks = tasks.length - completedTasks
 
-  function handleAddTask(event: FormEvent<HTMLFormElement>) {
+  async function handleAddTask(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     const formData = new FormData(event.currentTarget)
     const title = String(formData.get('title') ?? '').trim()
 
-    if (!title) return
+    if (!title || !user) return
 
-    setTasks((currentTasks) => [
-      ...currentTasks,
-      {
-        id: Date.now(),
-        title,
-        completed: false,
-      },
-    ])
+    await addTask(user.uid, title)
+
     setShowTaskForm(false)
   }
 
-  function handleToggleTask(taskId: number) {
-    setTasks((currentTasks) =>
-      currentTasks.map((task) =>
-        task.id === taskId
-          ? { ...task, completed: !task.completed }
-          : task
-      )
-    )
+  async function handleToggleTask(taskId: string) {
+    if (!user) return
+
+    const task = tasks.find((item) => item.id === taskId)
+
+    if (!task) return
+
+    await updateTask(user.uid, taskId, !task.completed)
   }
 
-  function handleDeleteTask(taskId: number) {
-    setTasks((currentTasks) =>
-      currentTasks.filter((task) => task.id !== taskId)
-    )
+  async function handleDeleteTask(taskId: string) {
+    if (!user) return
+
+    await removeTask(user.uid, taskId)
+  }
+
+
+  if (checkingAuth) {
+    return <p>Comprobando sesión...</p>
+  }
+
+  if (!user) {
+    return <AuthForm />
   }
 
   return (
@@ -89,8 +117,14 @@ function App() {
             <h1>Panel principal</h1>
           </div>
 
-          <button className="profile-button" type="button">
-            Mi perfil
+          <button
+            className="profile-button"
+            type="button"
+            onClick={async () => {
+              await logoutUser()
+            }}
+          >
+            Cerrar sesión
           </button>
         </header>
 
@@ -198,15 +232,3 @@ function App() {
 }
 
 export default App
-
-// Prueba de actualización
-
-// Otra prueba
-
-// Prueba de actualización
-
-// Prueba de actualización
-
-// Prueba de actualización.
-
-// Prueba
