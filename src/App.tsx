@@ -35,6 +35,9 @@ function App() {
 
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [tasks, setTasks] = useState<Task[]>([])
+  const [sendingSummary, setSendingSummary] = useState(false)
+  const [summaryMessage, setSummaryMessage] = useState('')
+  const [summaryError, setSummaryError] = useState(false)
   const completedTasks = tasks.filter((task) => task.completed).length
   const pendingTasks = tasks.length - completedTasks
 
@@ -67,6 +70,44 @@ function App() {
     await removeTask(user.uid, taskId)
   }
 
+  async function handleSendSummary() {
+    setSendingSummary(true)
+    setSummaryMessage('')
+    setSummaryError(false)
+
+    try {
+      const response = await fetch('/api/send-summary', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: user?.email,
+          tasks: tasks.map((task) => ({
+            title: task.title,
+            completed: task.completed,
+          })),
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.message || 'No fue posible enviar el resumen.')
+      }
+
+      setSummaryMessage('¡Resumen enviado correctamente a tu correo!')
+    } catch (error) {
+      setSummaryError(true)
+      setSummaryMessage(
+        error instanceof Error
+          ? error.message
+          : 'Ocurrió un error al enviar el resumen.'
+      )
+    } finally {
+      setSendingSummary(false)
+    }
+  }
 
   if (checkingAuth) {
     return <p>Comprobando sesión...</p>
@@ -172,20 +213,43 @@ function App() {
             </form>
           )}
 
+
           <div className="section-heading">
             <div>
               <h2>Mis tareas</h2>
               <p>Aquí podrás consultar y organizar tu trabajo.</p>
             </div>
 
-            <button
-              className="primary-button"
-              type="button"
-              onClick={() => setShowTaskForm(true)}
-            >
-              + Nueva tarea
-            </button>
+            <div className="section-actions">
+              <button
+                className="primary-button"
+                type="button"
+                onClick={handleSendSummary}
+                disabled={sendingSummary}
+              >
+                {sendingSummary ? 'Enviando...' : 'Enviar resumen por correo'}
+              </button>
+
+              <button
+                className="primary-button"
+                type="button"
+                onClick={() => setShowTaskForm(true)}
+              >
+                + Nueva tarea
+              </button>
+            </div>
           </div>
+
+          {summaryMessage && (
+            <p
+              role="status"
+              aria-live="polite"
+              style={{ color: summaryError ? 'red' : 'green' }}
+            >
+              {summaryMessage}
+            </p>
+          )}
+
 
           {tasks.length === 0 ? (
             <div className="empty-state">
