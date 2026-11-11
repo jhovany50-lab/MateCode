@@ -203,7 +203,7 @@ El despliegue de producción se realiza mediante Vercel, conectado al repositori
 ## Despliegue
 
 - **Repositorio GitHub:** https://github.com/jhovany50-lab/MateCode
-- **Aplicación en producción:** [Agregar aquí la URL pública de Vercel]
+- **Aplicación en producción:** https://mate-code-eosin.vercel.app
 
 ## Uso responsable de inteligencia artificial
 
