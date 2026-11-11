@@ -14,6 +14,7 @@ import {
 function App() {
   const [user, setUser] = useState<User | null>(null)
   const [checkingAuth, setCheckingAuth] = useState(true)
+  const [tasks, setTasks] = useState<Task[]>([])
   useEffect(() => {
     if (!user) return
 
@@ -22,7 +23,7 @@ function App() {
     })
 
     return unsubscribe
-  }, [user])
+  }, [user, setTasks])
 
   useEffect(() => {
     const unsubscribe = observeAuthState((currentUser) => {
@@ -34,7 +35,6 @@ function App() {
   }, [])
 
   const [showTaskForm, setShowTaskForm] = useState(false)
-  const [tasks, setTasks] = useState<Task[]>([])
   const [sendingSummary, setSendingSummary] = useState(false)
   const [summaryMessage, setSummaryMessage] = useState('')
   const [summaryError, setSummaryError] = useState(false)

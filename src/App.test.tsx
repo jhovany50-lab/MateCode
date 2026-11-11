@@ -63,6 +63,7 @@ describe('App', () => {
             })
         ).toBeInTheDocument()
         expect(screen.getByText('¡Bienvenido a MateCode!')).toBeInTheDocument()
+        expect(screen.getByText('Tu espacio está listo')).toBeInTheDocument()
         expect(getTasks).toHaveBeenCalledWith(
             'usuario-prueba-123',
             expect.any(Function)
@@ -153,5 +154,142 @@ describe('App', () => {
             'usuario-prueba-123',
             'tarea-123'
         )
+    })
+
+    it('muestra un mensaje cuando falla el envío del resumen', async () => {
+        const user = userEvent.setup()
+
+        vi.mocked(observeAuthState).mockImplementation((callback) => {
+            callback({
+                uid: 'usuario-prueba-123',
+                email: 'prueba@matecode.com',
+            } as never)
+            return vi.fn()
+        })
+
+        vi.mocked(getTasks).mockReturnValue(vi.fn())
+
+        vi.stubGlobal(
+            'fetch',
+            vi.fn().mockResolvedValue({
+                ok: false,
+                json: async () => ({
+                    message: 'No fue posible enviar el resumen por correo.',
+                }),
+            })
+        )
+
+        render(<App />)
+
+        await user.click(
+            screen.getByRole('button', {
+                name: /enviar resumen por correo/i,
+            })
+        )
+
+        expect(
+            await screen.findByRole('status')
+        ).toHaveTextContent(
+            'No fue posible enviar el resumen por correo.'
+        )
+
+        expect(fetch).toHaveBeenCalledWith(
+            '/api/send-summary',
+            expect.objectContaining({
+                method: 'POST',
+            })
+        )
+
+        vi.unstubAllGlobals()
+
+    })
+
+    it('muestra un mensaje cuando el resumen se envía correctamente', async () => {
+        const user = userEvent.setup()
+
+        vi.mocked(observeAuthState).mockImplementation((callback) => {
+            callback({
+                uid: 'usuario-prueba-123',
+                email: 'prueba@matecode.com',
+            } as never)
+            return vi.fn()
+        })
+
+        vi.mocked(getTasks).mockReturnValue(vi.fn())
+
+        vi.stubGlobal(
+            'fetch',
+            vi.fn().mockResolvedValue({
+                ok: true,
+                json: async () => ({
+                    message: 'Resumen enviado correctamente.',
+                }),
+            })
+        )
+
+        render(<App />)
+
+        await user.click(
+            screen.getByRole('button', {
+                name: /enviar resumen por correo/i,
+            })
+        )
+
+        expect(await screen.findByRole('status')).toHaveTextContent(
+            '¡Resumen enviado correctamente a tu correo!'
+        )
+
+        vi.unstubAllGlobals()
+    })
+
+    it('muestra el estado de carga mientras envía el resumen', async () => {
+        const user = userEvent.setup()
+
+        vi.mocked(observeAuthState).mockImplementation((callback) => {
+            callback({
+                uid: 'usuario-prueba-123',
+                email: 'prueba@matecode.com',
+            } as never)
+            return vi.fn()
+        })
+
+        vi.mocked(getTasks).mockReturnValue(vi.fn())
+
+        let resolveFetch!: (value: unknown) => void
+
+        vi.stubGlobal(
+            'fetch',
+            vi.fn().mockImplementation(
+                () =>
+                    new Promise((resolve) => {
+                        resolveFetch = resolve
+                    })
+            )
+        )
+
+        render(<App />)
+
+        const sendButton = screen.getByRole('button', {
+            name: /enviar resumen por correo/i,
+        })
+
+        await user.click(sendButton)
+
+        expect(screen.getByRole('button', {
+            name: /enviando/i,
+        })).toBeDisabled()
+
+        resolveFetch({
+            ok: true,
+            json: async () => ({
+                message: 'Resumen enviado correctamente.',
+            }),
+        })
+
+        expect(await screen.findByRole('status')).toHaveTextContent(
+            '¡Resumen enviado correctamente a tu correo!'
+        )
+
+        vi.unstubAllGlobals()
     })
 })
