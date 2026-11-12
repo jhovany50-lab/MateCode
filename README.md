@@ -17,6 +17,23 @@ La aplicación utiliza Firebase para la autenticación y persistencia de datos, 
 - Interfaz adaptable a diferentes dispositivos.
 - Pruebas automatizadas con Vitest y React Testing Library.
 
+## Demostración de la aplicación
+
+### 1. Inicio de sesión
+![Inicio de sesión](public/Evidence/01-inicio-sesion.png)
+
+### 2. Panel principal
+![Panel principal](public/Evidence/02-panel-principal.png)
+
+### 3. Gestión de tareas
+![Mis tareas](public/Evidence/03-mis-tareas.png)
+
+### 4. Creación y edición de tareas
+![Crear y editar tareas](public/Evidence/04-crear-editar-tareas.png)
+
+### 5. Envío de resumen por correo
+![Resumen recibido por correo](public/Evidence/05-resumen-correo.png)
+
 ## Tecnologías utilizadas
 
 | Tecnología | Aplicación |
