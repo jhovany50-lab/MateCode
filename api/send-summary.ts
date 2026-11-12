@@ -1,7 +1,30 @@
-
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
-import { getAdminAuth } from './firebaseAdmin.js'
+import { cert, getApps, initializeApp } from 'firebase-admin/app'
+import { getAuth } from 'firebase-admin/auth'
+
+function getAdminAuth() {
+    const projectId = process.env.FIREBASE_PROJECT_ID
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+
+    if (!projectId || !clientEmail || !privateKey) {
+        throw new Error('Faltan las credenciales de Firebase Admin.')
+    }
+
+    const app =
+        getApps().length > 0
+            ? getApps()[0]
+            : initializeApp({
+                credential: cert({
+                    projectId,
+                    clientEmail,
+                    privateKey,
+                }),
+            })
+
+    return getAuth(app)
+}
 
 type SummaryTask = {
     title: string
