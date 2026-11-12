@@ -14,17 +14,20 @@ import { db } from '../lib/firebase'
 export type Task = {
     id: string
     title: string
+    description: string
     completed: boolean
 }
 
 export async function addTask(
     userId: string,
-    title: string
+    title: string,
+    description: string
 ) {
     const tasksRef = collection(db, 'users', userId, 'tasks')
 
     return addDoc(tasksRef, {
         title,
+        description,
         completed: false,
         createdAt: new Date(),
     })
@@ -45,6 +48,7 @@ export function getTasks(
         const tasks = snapshot.docs.map((document) => ({
             id: document.id,
             ...document.data(),
+            description: document.data().description ?? '',
         })) as Task[]
 
         callback(tasks)
@@ -60,6 +64,20 @@ export async function updateTask(
 
     return updateDoc(taskRef, {
         completed,
+    })
+}
+
+export async function editTask(
+    userId: string,
+    taskId: string,
+    title: string,
+    description: string
+) {
+    const taskRef = doc(db, 'users', userId, 'tasks', taskId)
+
+    return updateDoc(taskRef, {
+        title,
+        description,
     })
 }
 

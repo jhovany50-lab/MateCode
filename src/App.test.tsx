@@ -91,7 +91,8 @@ describe('App', () => {
 
         expect(addTask).toHaveBeenCalledWith(
             'usuario-prueba-123',
-            'Estudiar JavaScript'
+            'Estudiar JavaScript',
+            ''
         )
     })
 
@@ -108,8 +109,9 @@ describe('App', () => {
                 {
                     id: 'tarea-123',
                     title: 'Estudiar JavaScript',
+                    description: 'Practicar funciones y arreglos',
                     completed: false,
-                },
+                }
             ])
             return vi.fn()
         })
@@ -140,8 +142,9 @@ describe('App', () => {
                 {
                     id: 'tarea-123',
                     title: 'Estudiar JavaScript',
+                    description: 'Practicar funciones y arreglos',
                     completed: false,
-                },
+                }
             ])
             return vi.fn()
         })
@@ -163,6 +166,7 @@ describe('App', () => {
             callback({
                 uid: 'usuario-prueba-123',
                 email: 'prueba@matecode.com',
+                getIdToken: vi.fn().mockResolvedValue('token-prueba'),
             } as never)
             return vi.fn()
         })
@@ -211,6 +215,7 @@ describe('App', () => {
             callback({
                 uid: 'usuario-prueba-123',
                 email: 'prueba@matecode.com',
+                getIdToken: vi.fn().mockResolvedValue('token-prueba'),
             } as never)
             return vi.fn()
         })
@@ -249,6 +254,7 @@ describe('App', () => {
             callback({
                 uid: 'usuario-prueba-123',
                 email: 'prueba@matecode.com',
+                getIdToken: vi.fn().mockResolvedValue('token-prueba'),
             } as never)
             return vi.fn()
         })

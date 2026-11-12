@@ -1,6 +1,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
+import { getAdminAuth } from '../firebaseAdmin'
 
 type SummaryTask = {
     title: string
@@ -30,7 +31,39 @@ export default async function handler(
         })
     }
 
-    const { email, tasks } = request.body ?? {}
+    const authorization = request.headers.authorization
+
+    if (!authorization?.startsWith('Bearer ')) {
+        return response.status(401).json({
+            message: 'No estás autenticado.',
+        })
+    }
+
+    const idToken = authorization.slice(7).trim()
+
+    if (!idToken) {
+        return response.status(401).json({
+            message: 'El token de autenticación está vacío.',
+        })
+    }
+
+    let decodedToken
+
+    try {
+        decodedToken = await getAdminAuth().verifyIdToken(idToken)
+    } catch {
+        return response.status(401).json({
+            message: 'Tu sesión no es válida o ha expirado.',
+        })
+    }
+    const email = decodedToken.email
+
+    if (!email) {
+        return response.status(403).json({
+            message: 'Tu cuenta no tiene un correo electrónico asociado.',
+        })
+    }
+    const { tasks } = request.body ?? {}
 
     if (
         typeof email !== 'string' ||
@@ -51,6 +84,7 @@ export default async function handler(
                 'completed' in task &&
                 typeof task.title === 'string' &&
                 task.title.trim().length > 0 &&
+                task.title.length <= 200 &&
                 typeof task.completed === 'boolean'
         )
     ) {

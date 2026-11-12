@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react'
-import type { User } from 'firebase/auth'
+import { type User } from 'firebase/auth'
 import { logoutUser, observeAuthState } from './auth/authService'
 import AuthForm from './auth/AuthForm'
 import './App.css'
@@ -7,6 +7,7 @@ import {
   addTask,
   getTasks,
   updateTask,
+  editTask,
   removeTask,
   type Task,
 } from './tasks/taskService'
@@ -35,6 +36,9 @@ function App() {
   }, [])
 
   const [showTaskForm, setShowTaskForm] = useState(false)
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
+  const [editingTitle, setEditingTitle] = useState('')
+  const [editingDescription, setEditingDescription] = useState('')
   const [sendingSummary, setSendingSummary] = useState(false)
   const [summaryMessage, setSummaryMessage] = useState('')
   const [summaryError, setSummaryError] = useState(false)
@@ -46,10 +50,11 @@ function App() {
 
     const formData = new FormData(event.currentTarget)
     const title = String(formData.get('title') ?? '').trim()
+    const description = String(formData.get('description') ?? '').trim()
 
     if (!title || !user) return
 
-    await addTask(user.uid, title)
+    await addTask(user.uid, title, description)
 
     setShowTaskForm(false)
   }
@@ -70,19 +75,38 @@ function App() {
     await removeTask(user.uid, taskId)
   }
 
+  async function handleSaveEdit() {
+    if (!user || !editingTaskId) return
+
+    const title = editingTitle.trim()
+    const description = editingDescription.trim()
+
+    if (!title) return
+
+    await editTask(user.uid, editingTaskId, title, description)
+
+    setEditingTaskId(null)
+    setEditingTitle('')
+    setEditingDescription('')
+  }
+
   async function handleSendSummary() {
+    if (!user) return
+
     setSendingSummary(true)
     setSummaryMessage('')
     setSummaryError(false)
 
     try {
+      const idToken = await user.getIdToken()
+
       const response = await fetch('/api/send-summary', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
         },
         body: JSON.stringify({
-          email: user?.email,
           tasks: tasks.map((task) => ({
             title: task.title,
             completed: task.completed,
@@ -206,7 +230,17 @@ function App() {
                 name="title"
                 type="text"
                 placeholder="Ej. Preparar informe"
+                required
               />
+
+              <label htmlFor="task-description">Descripción</label>
+              <textarea
+                id="task-description"
+                name="description"
+                placeholder="Describe brevemente qué necesitas hacer..."
+                rows={3}
+              />
+
               <button className="primary-button" type="submit">
                 Guardar tarea
               </button>
@@ -273,8 +307,65 @@ function App() {
                         checked={task.completed}
                         onChange={() => handleToggleTask(task.id)}
                       />
-                      <span>{task.title}</span>
+                      {editingTaskId === task.id ? (
+                        <div className="edit-task-fields">
+                          <input
+                            type="text"
+                            className="edit-task-input"
+                            value={editingTitle}
+                            onChange={(event) => setEditingTitle(event.target.value)}
+                            autoFocus
+                          />
+
+                          <textarea
+                            className="edit-task-description"
+                            value={editingDescription}
+                            onChange={(event) => setEditingDescription(event.target.value)}
+                            placeholder="Descripción de la tarea"
+                            rows={3}
+                          />
+                        </div>
+                      ) : (
+                        <div className="task-display">
+                          <strong>{task.title}</strong>
+                          {task.description && (
+                            <p>{task.description}</p>
+                          )}
+                        </div>
+                      )}
                     </label>
+
+                    {editingTaskId === task.id ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={handleSaveEdit}
+                        >
+                          Guardar
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingTaskId(null)
+                            setEditingTitle('')
+                          }}
+                        >
+                          Cancelar
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingTaskId(task.id)
+                          setEditingTitle(task.title)
+                          setEditingDescription(task.description ?? '')
+                        }}
+                      >
+                        Editar
+                      </button>
+                    )}
 
                     <button
                       className="delete-button"
