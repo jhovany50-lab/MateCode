@@ -10,7 +10,7 @@ La aplicación utiliza Firebase para la autenticación y persistencia de datos, 
 
 - Registro e inicio de sesión con correo electrónico y contraseña.
 - Persistencia de sesión mediante Firebase Authentication.
-- Gestión de tareas: crear, consultar, completar y eliminar.
+- Gestión de tareas: crear, consultar, editar, completar y eliminar.
 - Sincronización de tareas en tiempo real mediante Firestore.
 - Panel principal con indicadores de tareas totales, pendientes y completadas.
 - Envío de resumen de tareas por correo electrónico.
@@ -32,6 +32,10 @@ La aplicación utiliza Firebase para la autenticación y persistencia de datos, 
 | React Testing Library | Pruebas de componentes |
 
 ## Arquitectura del proyecto
+
+MateCode utiliza una arquitectura organizada por responsabilidades, separando la interfaz de usuario, los servicios de autenticación, la gestión de tareas y las integraciones externas.
+
+### Estructura de carpetas
 
 ```text
 MateCode/
@@ -63,6 +67,25 @@ MateCode/
 └── README.md
 ```
 
+### Responsabilidades principales
+
+- **src/auth:** contiene el formulario y los servicios relacionados con el registro y la autenticación de usuarios.
+- **src/tasks:** contiene la lógica de acceso y administración de tareas en Firestore.
+- **src/lib:** centraliza la configuración de Firebase.
+- **src/test:** contiene la configuración de las pruebas automatizadas.
+- **api:** contiene las funciones serverless de Vercel. La función `send-summary.ts` integra Firebase Admin para verificar la autenticación y AWS SES para enviar correos electrónicos.
+
+### Decisiones arquitectónicas
+
+- React y TypeScript se utilizan para construir una interfaz tipada y organizada por componentes.
+- Firebase Authentication administra las cuentas y sesiones de los usuarios.
+- Cloud Firestore almacena las tareas asociadas a cada usuario.
+- AWS SES se integra desde el backend para mantener protegidas las credenciales.
+- Vercel Functions permite ejecutar operaciones del servidor sin exponerlas al navegador.
+- Vitest y React Testing Library permiten verificar el comportamiento de los componentes.
+
+Esta separación facilita el mantenimiento del código y permite identificar las responsabilidades de cada parte de la aplicación.
+
 ## Requisitos previos
 
 - Node.js.
@@ -70,6 +93,7 @@ MateCode/
 - Una cuenta de Firebase.
 - Una cuenta de AWS con Amazon SES configurado.
 - Una cuenta de Vercel.
+- Vercel CLI instalada para ejecutar las funciones serverless localmente.
 
 ## Instalación y ejecución local
 
@@ -99,13 +123,21 @@ npm install
 npm run dev
 ```
 
+**Nota:** Para probar la aplicación junto con las funciones serverless (incluido el envío de correos), utiliza:
+
+```bash
+vercel dev
+```
+
+El comando `npm run dev` inicia únicamente el servidor de desarrollo de Vite.
+
 ## Variables de entorno
 
-El proyecto incluye un archivo `.env.example` con las variables necesarias para configurar Firebase y AWS SES. Para iniciar el proyecto localmente, crea una copia de este archivo con el nombre `.env.local` y completa los valores correspondientes con tus propias credenciales. Nunca publiques el archivo `.env.local` en el repositorio.
+El proyecto utiliza variables de entorno para configurar Firebase, Firebase Admin y AWS SES.
 
-La aplicación requiere las siguientes variables:
+Para iniciar el proyecto localmente, crea un archivo `.env.local` en la raíz del proyecto y configura las siguientes variables con tus propias credenciales.
 
-### Firebase
+### Firebase (Frontend)
 
 ```env
 VITE_FIREBASE_API_KEY=
@@ -116,7 +148,19 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=
 VITE_FIREBASE_APP_ID=
 ```
 
-### AWS SES
+Estas variables permiten conectar la aplicación con Firebase Authentication y Cloud Firestore.
+
+### Firebase Admin (Backend)
+
+```env
+FIREBASE_PROJECT_ID=
+FIREBASE_CLIENT_EMAIL=
+FIREBASE_PRIVATE_KEY=
+```
+
+Estas credenciales son utilizadas exclusivamente por la función serverless para verificar los tokens de autenticación de Firebase.
+
+### AWS SES (Backend)
 
 ```env
 AWS_ACCESS_KEY_ID=
@@ -125,7 +169,11 @@ AWS_REGION=us-east-2
 SES_FROM_EMAIL=
 ```
 
-Las variables de Firebase se utilizan en el cliente. Las credenciales de AWS deben permanecer exclusivamente en el entorno del servidor y nunca deben exponerse en el frontend ni subirse al repositorio.
+Estas variables permiten autenticar la conexión con Amazon SES y configurar el correo remitente.
+
+**Seguridad:** las credenciales privadas de Firebase Admin y AWS SES nunca deben exponerse en el frontend ni publicarse en GitHub. El archivo `.env.local` está excluido del repositorio mediante `.gitignore`. En producción, estas variables se configuran desde Vercel.
+
+El archivo `.env.example` contiene la plantilla de configuración sin credenciales reales.
 
 ## Base de datos y seguridad
 
@@ -144,39 +192,73 @@ Las reglas de seguridad de Firestore restringen el acceso a las tareas para que 
 
 ## Envío de correos electrónicos
 
-El envío de resúmenes se realiza mediante una función serverless ubicada en:
+MateCode utiliza AWS Simple Email Service (SES) para enviar resúmenes de tareas mediante una función serverless de Vercel.
 
-```text
+La función se encuentra en:
+
 api/send-summary.ts
-```
 
-La función utiliza AWS SES para enviar un correo con el resumen de actividades del usuario.
+### Flujo de envío
 
-El servicio contempla:
+1. El usuario solicita enviar su resumen desde la aplicación.
+2. El frontend obtiene el token de autenticación de Firebase.
+3. La solicitud se envía mediante una petición POST a `/api/send-summary`, incluyendo el token y la lista de tareas.
+4. La función serverless verifica el token mediante Firebase Admin.
+5. Se obtiene el correo electrónico asociado a la cuenta autenticada.
+6. Se valida la información recibida y se genera el resumen.
+7. AWS SES envía el correo electrónico en formato HTML y texto.
+8. La aplicación muestra el resultado de la operación.
 
+### Validaciones y seguridad
+
+- Verificación del token de autenticación.
 - Validación del correo electrónico.
-- Validación de la lista de tareas.
-- Límite máximo de 100 tareas.
-- Generación de contenido HTML y texto.
-- Manejo de respuestas exitosas y errores.
+- Validación de la estructura de las tareas.
+- Límite máximo de 100 tareas por resumen.
+- Uso de variables de entorno para las credenciales.
+- Las credenciales de AWS y Firebase Admin permanecen exclusivamente en el servidor.
 
-## Pruebas automatizadas
+La función contempla respuestas de éxito y error para informar al usuario sobre el resultado del envío.
 
-El proyecto utiliza Vitest y React Testing Library.
+**Nota:** AWS SES en modo Sandbox solamente permite enviar correos a destinatarios verificados.
 
-Ejecutar todas las pruebas:
+## Pruebas
+
+El proyecto utiliza **Vitest** y **React Testing Library** para verificar el comportamiento de la aplicación y sus componentes.
+
+Las pruebas se encuentran organizadas en los siguientes archivos:
+
+- `src/App.test.tsx`: contiene 8 pruebas para verificar la autenticación, el panel principal, la gestión de tareas y el envío de resúmenes por correo.
+- `src/auth/AuthForm.test.tsx`: contiene 5 pruebas para verificar el formulario de autenticación.
+
+### Cobertura de pruebas
+
+Las pruebas de la aplicación verifican:
+
+- Visualización del formulario cuando no existe una sesión activa.
+- Acceso al panel principal cuando el usuario está autenticado.
+- Creación de tareas.
+- Marcado de tareas como completadas.
+- Eliminación de tareas.
+- Manejo de errores durante el envío del resumen por correo.
+- Confirmación visual cuando el correo se envía correctamente.
+- Estado de carga durante el envío.
+
+Se utilizan funciones simuladas (*mocks*) para aislar los servicios de autenticación y tareas, así como las solicitudes de envío de correo. Esto permite comprobar las respuestas de la interfaz sin depender directamente de los servicios externos.
+
+### Ejecutar las pruebas
 
 ```bash
 npm run test
 ```
 
-Ejecutar las pruebas en modo observación:
+Para ejecutar las pruebas en modo de observación:
 
 ```bash
 npm run test:watch
 ```
 
-Las pruebas verifican funcionalidades de autenticación, visualización del panel, gestión de tareas y envío de resúmenes por correo.
+**Resultado:** 13 pruebas distribuidas en 2 archivos.
 
 ## Compilación y despliegue
 
@@ -207,15 +289,31 @@ El despliegue de producción se realiza mediante Vercel, conectado al repositori
 
 ## Uso responsable de inteligencia artificial
 
-Durante el desarrollo de MateCode se utilizó inteligencia artificial como herramienta de apoyo para:
+Durante el desarrollo de MateCode utilicé herramientas de inteligencia artificial como apoyo para resolver dudas técnicas, analizar errores y comprender conceptos relacionados con React, TypeScript, Firebase, AWS SES y Vercel.
 
-- Comprender conceptos de React, TypeScript y Firebase.
-- Resolver dudas y analizar errores.
-- Orientar la implementación de servicios y funciones.
-- Diseñar y mejorar pruebas automatizadas.
-- Revisar la documentación del proyecto.
+### Aplicaciones principales
 
-Las propuestas generadas mediante inteligencia artificial fueron revisadas, probadas y adaptadas durante el desarrollo. Se buscó comprender el funcionamiento de cada componente y las decisiones técnicas implementadas.
+- **Resolución de errores:** apoyo para interpretar mensajes de error y encontrar posibles causas durante el desarrollo y despliegue.
+- **Comprensión de código:** explicación de funciones, componentes, servicios y configuraciones para entender su propósito y funcionamiento.
+- **Implementación:** orientación para desarrollar funcionalidades y conectar los diferentes servicios del proyecto.
+- **Documentación:** apoyo para organizar y redactar la documentación técnica del proyecto.
+
+### ¿Qué resultó más efectivo?
+
+La estrategia más efectiva fue trabajar de manera gradual, abordando un problema a la vez y proporcionando el código o los mensajes de error correspondientes.
+
+En lugar de aplicar soluciones sin revisarlas, comprobé los cambios mediante pruebas locales, ejecución de la aplicación y validaciones en el entorno de producción.
+
+### Aprendizajes y buenas prácticas
+
+- Utilizar la IA como herramienta de apoyo y no como sustituto de la comprensión técnica.
+- Analizar las soluciones propuestas antes de incorporarlas al proyecto.
+- Realizar cambios pequeños y comprobar su funcionamiento.
+- Utilizar pruebas para detectar errores y verificar comportamientos.
+- Proteger las credenciales y mantener la configuración sensible fuera del frontend y del repositorio.
+- Consultar los mensajes de error y los registros de ejecución para identificar problemas.
+
+La experiencia permitió comprender mejor el proceso de desarrollo, integración, pruebas y despliegue de una aplicación web.
 
 ## Autor
 
