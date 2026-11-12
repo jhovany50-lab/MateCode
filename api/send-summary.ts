@@ -1,7 +1,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
-import { getAdminAuth } from './firebaseAdmin'
+import { getAdminAuth } from './firebaseAdmin.js'
 
 type SummaryTask = {
     title: string
