@@ -63,7 +63,6 @@ describe('App', () => {
             })
         ).toBeInTheDocument()
         expect(screen.getByText('¡Bienvenido a MateCode!')).toBeInTheDocument()
-        expect(screen.getByText('Tu espacio está listo')).toBeInTheDocument()
         expect(getTasks).toHaveBeenCalledWith(
             'usuario-prueba-123',
             expect.any(Function)
@@ -81,6 +80,7 @@ describe('App', () => {
 
         render(<App />)
 
+        await user.click(screen.getByRole('link', { name: /mis tareas/i }))
         await user.click(screen.getByRole('button', { name: /nueva tarea/i }))
 
         const input = screen.getByPlaceholderText('Ej. Preparar informe')
@@ -118,6 +118,8 @@ describe('App', () => {
 
         render(<App />)
 
+        await user.click(screen.getByRole('link', { name: /mis tareas/i }))
+
         const checkbox = screen.getByRole('checkbox')
 
         await user.click(checkbox)
@@ -151,6 +153,7 @@ describe('App', () => {
 
         render(<App />)
 
+        await user.click(screen.getByRole('link', { name: /mis tareas/i }))
         await user.click(screen.getByRole('button', { name: /eliminar/i }))
 
         expect(removeTask).toHaveBeenCalledWith(
@@ -184,6 +187,8 @@ describe('App', () => {
         )
 
         render(<App />)
+
+        await user.click(screen.getByRole('link', { name: /mis tareas/i }))
 
         await user.click(
             screen.getByRole('button', {
@@ -234,6 +239,8 @@ describe('App', () => {
 
         render(<App />)
 
+        await user.click(screen.getByRole('link', { name: /mis tareas/i }))
+
         await user.click(
             screen.getByRole('button', {
                 name: /enviar resumen por correo/i,
@@ -274,6 +281,8 @@ describe('App', () => {
         )
 
         render(<App />)
+
+        await user.click(screen.getByRole('link', { name: /mis tareas/i }))
 
         const sendButton = screen.getByRole('button', {
             name: /enviar resumen por correo/i,

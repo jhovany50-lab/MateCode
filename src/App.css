@@ -231,6 +231,17 @@ button {
   gap: 18px;
 }
 
+.section-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.section-actions .primary-button {
+  white-space: nowrap;
+}
+
 .section-heading h2 {
   margin: 0 0 8px;
   font-size: 21px;
@@ -340,6 +351,9 @@ button {
   }
 
   .main-content {
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 auto;
     padding: 24px 16px;
   }
 
@@ -376,6 +390,49 @@ button {
   .empty-state {
     padding: 35px 8px 20px;
   }
+
+  .task-content {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+
+  .task-content>button {
+    grid-row: 2;
+  }
+
+  .task-content>button:nth-of-type(1) {
+    grid-column: 1;
+  }
+
+  .task-content>button:nth-of-type(2) {
+    grid-column: 2;
+  }
+
+
+  .task-content>.task-label {
+    grid-column: 1 / -1;
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .task-content .edit-task-fields {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .task-content .edit-task-input,
+  .task-content .edit-task-description {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .edit-task-input:focus,
+  .edit-task-description:focus {
+    border-color: #4f46e5;
+    outline: 3px solid rgb(79 70 229 / 15%);
+  }
+
 }
 
 .task-form {
@@ -451,11 +508,30 @@ button {
   text-decoration: line-through;
 }
 
+
 .task-content {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
+  min-width: 0;
+}
+
+.task-content>button {
+  padding: 9px 14px;
+  border: 1px solid #dbe2ee;
+  border-radius: 8px;
+  color: #273653;
+  background: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 160ms ease;
+}
+
+.task-content>button:not(.delete-button):hover {
+  background: #eef2ff;
+  border-color: #a5b4fc;
 }
 
 .delete-button {
@@ -521,4 +597,121 @@ button {
   color: #778198;
   font-size: 13px;
   line-height: 1.5;
+}
+
+
+/* ========================================
+   AUTENTICACIÓN - LOGIN Y REGISTRO
+======================================== */
+
+.auth-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100svh;
+  padding: 24px;
+  background: linear-gradient(135deg, #eef2ff, #f5f7fb, #e0e7ff);
+}
+
+.auth-container h1 {
+  margin: 0 0 8px;
+  color: #172554;
+  font-size: clamp(36px, 5vw, 48px);
+  font-weight: 800;
+  letter-spacing: -2px;
+}
+
+.auth-container h2 {
+  margin: 0 0 28px;
+  color: #273653;
+  font-size: 23px;
+}
+
+.auth-container form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 400px;
+  padding: 30px;
+  border: 1px solid #e5eaf4;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 12px 35px rgb(30 50 90 / 9%);
+}
+
+.auth-container form input {
+  width: 100%;
+  padding: 14px 15px;
+  border: 1px solid #d5ddec;
+  border-radius: 9px;
+  color: #172033;
+  background: #f8faff;
+  font: inherit;
+  font-size: 14px;
+  transition: border 160ms ease, box-shadow 160ms ease;
+}
+
+.auth-container form input:focus {
+  border-color: #4f46e5;
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(79 70 229 / 12%);
+}
+
+.auth-container form button {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: 9px;
+  color: #ffffff;
+  background: #4f46e5;
+  font-weight: 650;
+  transition: background 160ms ease;
+}
+
+.auth-container form button:hover:not(:disabled) {
+  background: #4338ca;
+}
+
+.auth-container form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.auth-container form [role="alert"] {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.auth-container>p {
+  margin: 22px 0 10px;
+  color: #68758d;
+  font-size: 14px;
+}
+
+.auth-container>button {
+  padding: 10px 18px;
+  border: 1px solid #c7d2fe;
+  border-radius: 9px;
+  color: #4338ca;
+  background: #eef2ff;
+  font-weight: 600;
+  transition: background 160ms ease;
+}
+
+.auth-container>button:hover {
+  background: #e0e7ff;
+}
+
+@media (max-width: 480px) {
+  .auth-container {
+    padding: 18px;
+  }
+
+  .auth-container form {
+    padding: 24px 20px;
+  }
 }
