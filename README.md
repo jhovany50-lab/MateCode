@@ -34,6 +34,22 @@ La aplicación utiliza Firebase para la autenticación y persistencia de datos, 
 ### 5. Envío de resumen por correo
 ![Resumen recibido por correo](public/Evidence/05-resumen-correo.png)
 
+## Nota sobre el envío de correos electrónicos
+
+La funcionalidad de envío de resúmenes por correo electrónico está implementada mediante AWS Simple Email Service (SES) y ha sido probada satisfactoriamente en el entorno de producción de la aplicación.
+
+**Consideración sobre AWS SES:**
+
+Actualmente, la cuenta de AWS SES se encuentra en modo Sandbox (entorno de pruebas). Debido a esta restricción, AWS únicamente permite enviar correos a direcciones de correo electrónico previamente verificadas.
+
+Para probar esta funcionalidad con una cuenta diferente, es necesario verificar manualmente la dirección del destinatario desde la consola de Amazon SES.
+
+Esta limitación se debe a que el proyecto no cuenta actualmente con un dominio propio verificado para configurar la identidad de envío y solicitar el acceso de producción de AWS SES.
+
+**Importante:** Esta restricción corresponde a la configuración de la cuenta de AWS SES y no a una limitación de la implementación de MateCode. La autenticación, la generación del resumen y la integración con el servicio de envío están implementadas.
+
+La aplicación podrá enviar correos a los destinatarios permitidos por la configuración actual de AWS SES.
+
 ## Tecnologías utilizadas
 
 | Tecnología | Aplicación |

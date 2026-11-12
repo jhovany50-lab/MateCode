@@ -30,6 +30,9 @@ function App() {
   useEffect(() => {
     const unsubscribe = observeAuthState((currentUser) => {
       setUser(currentUser)
+      setSummaryMessage('')
+      setSummaryError(false)
+      setSendingSummary(false)
       setCheckingAuth(false)
     })
 
